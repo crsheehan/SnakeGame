@@ -1,0 +1,394 @@
+﻿@page "/snake"
+@rendermode InteractiveServer
+@using Blazor.Extensions
+@using Blazor.Extensions.Canvas
+@using Blazor.Extensions.Canvas.Canvas2D
+@using System.Diagnostics
+@using System.Text.Json
+@using GUI.Client.Controllers
+@using GUI.Client.Models
+
+@inject IJSRuntime JsRuntime;
+
+<PageTitle> Snake</PageTitle>
+
+<!-- Create html objects for images -->
+<div style="display: none;">
+    <img @ref="_backgroundImageRef" src="images/background.png"/>
+    <img @ref="_wallImageRef" src="images/WallSprite.png"/>
+</div>
+
+<!-- Buttons for connection, server, port and name -->
+<div class="input-row">
+    <label for="url"> Server Address: </label>
+    <input id="url" disabled="@_isConnected" type="text" @bind="_serverNameOrAddress"/>
+    <label for="url"> Port: </label>
+    <input id="port" disabled="@_isConnected" type="number" @bind="_serverPort" class="port"/>
+    <label for="url"> Your Name: </label>
+    <input id="name" disabled="@_isConnected" type="text" @bind="_playerName" class="port"/>
+
+
+    <!-- If client is connected, show disconnect button and scoreboard -->
+    @if (_isConnected)
+    {
+        <button class="btn btn-primary" @onclick=" HandleDisconnect">Disconnect</button>
+
+
+        <div class="scoreboard">
+            <h3>Scores</h3>
+            @if (_controller?._world?.snakes != null)
+            {
+                <ul>
+                    @foreach (var snake in _controller._world.snakes.Values.Where(s => !s.dc).OrderByDescending(s => s.score)) //Ranks Players!!! Sorts by score
+                    {
+                        <li>
+                            @snake.name — @snake.score
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    }
+    else //Client disconnected
+    {
+        <button class="btn btn-primary" @onclick="HandleConnect">Connect</button>
+    }
+</div>
+
+
+<!-- Canvas to draw game -->
+<div id="snakeCanvas"
+     style="position: fixed; width: 100%; height: 100%; @(_isConnected ? "" : "display:none;")">
+    <BECanvas Width="1000" Height="1000" @ref="_canvasReference"></BECanvas>
+</div>
+
+
+
+@code
+{
+    /// <summary>
+    /// Stores reference to canvas!
+    /// </summary>
+    private BECanvasComponent _canvasReference = null!;
+
+    /// <summary>
+    /// This is the canvas that we are drawing on in drawframe
+    /// </summary>
+    private Canvas2DContext _context = null;
+
+    /// <summary>
+    /// Connection to javascript file?? Used for keyboard inputs
+    /// </summary>
+    private IJSObjectReference _jsModule = null!;
+
+    /// <summary>
+    /// Network controller that controls communication between the client and server by recieving and sending messages
+    /// </summary>
+    private NetworkController _controller = new NetworkController();
+
+    /// <summary>
+    /// Default server name to connect to
+    /// </summary>
+    private string _serverNameOrAddress = "localhost";
+
+    /// <summary>
+    /// Default port to connect to
+    /// </summary>
+    private int _serverPort = 11000;
+
+    /// <summary>
+    /// Default player name
+    /// </summary>
+    private string _playerName = "Default";
+
+    /// <summary>
+    /// Bool indicating if the client is connected to the server
+    /// </summary>
+    private bool _isConnected = false;
+
+    /// <summary>
+    /// Canvas width
+    /// </summary>
+    private const int ViewWidth = 1000;
+
+    /// <summary>
+    /// Canvas height
+    /// </summary>
+    private const int ViewHeight = 1000;
+
+    /// <summary>
+    /// Reference to background image
+    /// </summary>
+    private ElementReference _backgroundImageRef;
+
+    /// <summary>
+    /// Reference to wall image
+    /// </summary>
+    private ElementReference _wallImageRef;
+
+    /// <summary>
+    /// List of possible colors for snakes in Hex. 
+    /// </summary>
+    private readonly string[] SnakeColors = new[] { "#FF4136", "#2ECC40", "#0074D9", "#FFDC00", "#B10DC9", "#FF851B", "#39CCCC", "#85144b" };
+
+
+    /// <summary>
+    /// Runs when the page first loads. Loads the _jsModule, canvas, and starts the game loop
+    /// </summary>
+    /// <param name="firstRender">Indicates whether this is the first render</param>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./Pages/SnakeGUI.razor.js");
+            _context = await _canvasReference.CreateCanvas2DAsync();
+            await JsRuntime.InvokeAsync<object>("initRenderJS", DotNetObjectReference.Create(this));
+
+            _ = GameLoop();
+        }
+    }
+
+    /// <summary>
+    /// Renders the view once every 20 milliseconds (50 frames/second)
+    /// </summary>
+    private async Task GameLoop()
+    {
+        while (true)
+        {
+            await Task.Delay(20);
+
+            //If connected, update
+            if (_controller.IsConnected && !_isConnected)
+            {
+                _isConnected = true;
+                _ = InvokeAsync(StateHasChanged);
+            }
+
+            await DrawFrame();
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// This draws the information received from the Network Controller onto the canvas.
+    /// </summary>
+    private async Task DrawFrame()
+    {
+        //If not connect, just don't draw anything
+        if (!_isConnected || !_controller.IsConnected)
+            return;
+
+        try
+        {
+            await _context.SetFillStyleAsync("black"); //Background behind image
+
+            //Create a copy of the world from the controller
+            World world;
+            lock (_serverNameOrAddress)
+            {
+                if (!_controller._world.snakes.ContainsKey(_controller._playerId)) //if our snake doesn't exist yet, don't draw
+                {
+                    return;
+                }
+
+                world = new World(_controller._world);
+
+                // Remove disconnected snakes from local copy (necessary for scoreboard)
+                world.snakes = world.snakes
+                    .Where(kvp => !kvp.Value.dc)
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            }
+
+
+            await _context.BeginBatchAsync();
+            await _context.FillRectAsync(0, 0, ViewWidth, ViewHeight);
+
+            var mySnake = _controller.MySnake;
+
+            //Image centering -------------------------------------------------------------------
+            // clip the view so that objects drawn outside the canvas will not be shown
+            await _context.BeginPathAsync();
+            await _context.RectAsync(0, 0, ViewWidth, ViewHeight);
+            await _context.ClipAsync();
+
+            // Because we are modifying the transformation matrix, we need to save it so we can restore it at the end
+            await _context.SaveAsync();
+
+            var snakeHead = mySnake.body.Last();
+            await _context.TranslateAsync(
+                ViewWidth / 2 - snakeHead.X,
+                ViewHeight / 2 - snakeHead.Y
+            );
+            // Draw the background:
+            await _context.DrawImageAsync(_backgroundImageRef, -world.size / 2, -world.size / 2, world.size, world.size);
+            //-----------------------------------------------------------------------------------
+
+            int tileSize = 50;
+
+            //Draw walls
+            foreach (Wall wall in world.walls)
+            {
+                var p1 = wall.p1;
+                var p2 = wall.p2;
+
+
+                if (p1.Y == p2.Y) // horizontal wall
+                {
+                    int minX = Math.Min(p1.X, p2.X);
+                    int maxX = Math.Max(p1.X, p2.X);
+
+                    for (int x = minX; x <= maxX; x += tileSize)
+                    {
+                        await _context.DrawImageAsync(_wallImageRef, x - tileSize / 2, p1.Y - tileSize / 2, tileSize, tileSize);
+                        
+                    }
+                }
+                else if (p1.X == p2.X) // vertical wall
+                {
+                    int minY = Math.Min(p1.Y, p2.Y);
+                    int maxY = Math.Max(p1.Y, p2.Y);
+
+                    for (int y = minY; y <= maxY; y += tileSize)
+                    {
+                        await _context.DrawImageAsync(_wallImageRef, p1.X - tileSize / 2, y - tileSize / 2, tileSize, tileSize);
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine("Somethign went wrong drawing wall");
+                }
+            }
+
+
+            // Draw powerups
+            foreach (Powerup powerup in world.powerups.Values)
+            {
+                if (!powerup.died)
+                {
+                    await _context.BeginPathAsync();
+                    await _context.ArcAsync(powerup.loc.X, powerup.loc.Y, 8, 0, 2 * Math.PI); //This draws a cirlce!
+                    await _context.SetFillStyleAsync("#FFD700"); // Gold color
+                    await _context.FillAsync();
+                    await _context.StrokeAsync();
+                }
+            }
+
+            //Draw snakes!
+            foreach (Snake snake in world.snakes.Values)
+            {
+                string color = GetSnakeColor(snake.snakeId);
+                await _context.SetFillStyleAsync(color);
+
+                for (int i = 0; i < snake.body.Count - 1; i++)
+                {
+                    await DrawSnakeSegment(snake.body[i], snake.body[i + 1]);
+                }
+            }
+
+
+            await _context.RestoreAsync();
+            await _context.EndBatchAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            return;
+        }
+    }
+
+    /// <summary>
+    /// Handles Key inputs from the player
+    /// </summary>
+    /// <param name="key"></param>
+    [JSInvokable]
+    public void HandleKeyPress(string key)
+    {
+        _controller.HandleKeyPress(key);
+    }
+
+    /// <summary>
+    /// Attempts to connect to the server!
+    /// </summary>
+    private void HandleConnect()
+    {
+        _controller = new();
+
+        Thread t = new Thread(() => _controller.ConnectToServer(_serverNameOrAddress, _serverPort, _playerName));
+        t.Start();
+
+        //  update the flag after connection
+        _isConnected = true;
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Handles disconnection from server
+    /// </summary>
+    private void HandleDisconnect()
+    {
+        _controller.DisconnectFromServer();
+        _isConnected = false;
+
+        //Get rid of previous controller, it's no longer valid!
+        _controller = new();
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    private async Task DrawSnakeSegment(Point2D a, Point2D b)
+    {
+        //Thickness of snake
+        const int width = 5;
+
+        if (a.X == b.X) // vertical 
+        {
+            int x = a.X - width / 2; //to center the rectangle
+            int minY = Math.Min(a.Y, b.Y);
+            int height = Math.Abs(a.Y - b.Y);
+
+            await _context.FillRectAsync(x, minY, width, height);
+        }
+        else if (a.Y == b.Y) // horizontal 
+        {
+            int minX = Math.Min(a.X, b.X);
+            int widthSeg = Math.Abs(a.X - b.X);
+            int y = a.Y - width / 2;
+
+            await _context.FillRectAsync(minX, y, widthSeg, width);
+        }
+    }
+
+    /// <summary>
+    /// Chooses snake color based off of snakeID. Repeats every 8 snakes
+    /// </summary>
+    /// <param name="snakeId">Snake ID</param>
+    /// <returns>String Hex Color</returns>
+    private string GetSnakeColor(int snakeId)
+    {
+        return SnakeColors[snakeId % SnakeColors.Length];
+    }
+
+
+}
+
+
+<style>
+    .scoreboard {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 12px;
+        border-radius: 8px;
+        width: 200px;
+        z-index: 9999;
+        font-family: Arial, sans-serif;
+    }
+
+</style>
