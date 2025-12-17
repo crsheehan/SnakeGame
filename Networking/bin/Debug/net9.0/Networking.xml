@@ -4,6 +4,11 @@
         <name>Networking</name>
     </assembly>
     <members>
+        <member name="M:Networking.MockGameDataSource.Stop">
+            <summary>
+            Stop connection, set IsConnected to false to stop sending information. 
+            </summary>
+        </member>
         <member name="T:Networking.NetworkConnection">
             <summary>
               Wraps the StreamReader/Writer/TcpClient together so we
@@ -103,6 +108,21 @@
               This should be run asynchronously via a new thread.
             </param>
             <param name="port"> The port (e.g., 11000) to listen on. </param>
+        </member>
+        <member name="T:Networking.TcpGameDataSource">
+            <summary>
+            This owns a network connection, handels the connect and receive from the connection, and can send data
+            </summary>
+        </member>
+        <member name="M:Networking.TcpGameDataSource.Start">
+            <summary>
+            Starts a network connection, sends player names, and listens for game data! 
+            </summary>
+        </member>
+        <member name="M:Networking.TcpGameDataSource.Stop">
+            <summary>
+            Stop listening 
+            </summary>
         </member>
     </members>
 </doc>

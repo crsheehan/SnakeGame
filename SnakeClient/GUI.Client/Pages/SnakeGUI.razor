@@ -21,15 +21,15 @@
 <!-- Buttons for connection, server, port and name -->
 <div class="input-row">
     <label for="url"> Server Address: </label>
-    <input id="url" disabled="@_isConnected" type="text" @bind="_serverNameOrAddress"/>
+    <input id="url" disabled="@_controller.IsConnected" type="text" @bind="_serverNameOrAddress"/>
     <label for="url"> Port: </label>
-    <input id="port" disabled="@_isConnected" type="number" @bind="_serverPort" class="port"/>
+    <input id="port" disabled="@_controller.IsConnected" type="number" @bind="_serverPort" class="port"/>
     <label for="url"> Your Name: </label>
-    <input id="name" disabled="@_isConnected" type="text" @bind="_playerName" class="port"/>
+    <input id="name" disabled="@_controller.IsConnected" type="text" @bind="_playerName" class="port"/>
 
 
     <!-- If client is connected, show disconnect button and scoreboard -->
-    @if (_isConnected)
+    @if (_controller.IsConnected)
     {
         <button class="btn btn-primary" @onclick=" HandleDisconnect">Disconnect</button>
 
@@ -58,7 +58,7 @@
 
 <!-- Canvas to draw game -->
 <div id="snakeCanvas"
-     style="position: fixed; width: 100%; height: 100%; @(_isConnected ? "" : "display:none;")">
+     style="position: fixed; width: 100%; height: 100%; @(_controller.IsConnected ? "" : "display:none;")">
     <BECanvas Width="1000" Height="1000" @ref="_canvasReference"></BECanvas>
 </div>
 
@@ -66,6 +66,8 @@
 
 @code
 {
+    private bool _useMockServer = false; 
+    
     /// <summary>
     /// Stores reference to canvas!
     /// </summary>
@@ -100,11 +102,6 @@
     /// Default player name
     /// </summary>
     private string _playerName = "Default";
-
-    /// <summary>
-    /// Bool indicating if the client is connected to the server
-    /// </summary>
-    private bool _isConnected = false;
 
     /// <summary>
     /// Canvas width
@@ -158,9 +155,8 @@
             await Task.Delay(20);
 
             //If connected, update
-            if (_controller.IsConnected && !_isConnected)
+            if (_controller.IsConnected)
             {
-                _isConnected = true;
                 _ = InvokeAsync(StateHasChanged);
             }
 
@@ -175,7 +171,7 @@
     private async Task DrawFrame()
     {
         //If not connect, just don't draw anything
-        if (!_isConnected || !_controller.IsConnected)
+        if (!_controller.IsConnected)
             return;
 
         try
@@ -311,15 +307,18 @@
     /// </summary>
     private void HandleConnect()
     {
-        _controller = new();
+        _controller = new NetworkController();
 
-        Thread t = new Thread(() => _controller.ConnectToServer(_serverNameOrAddress, _serverPort, _playerName));
-        t.Start();
-
-        //  update the flag after connection
-        _isConnected = true;
-        StateHasChanged();
+        if (_useMockServer)
+        {
+            _controller.UseMockServer(_playerName);
+        }
+        else
+        {
+            _controller.UseTcpServer(_serverNameOrAddress, _serverPort, _playerName);
+        }
     }
+
 
     /// <summary>
     /// Handles disconnection from server
@@ -327,7 +326,6 @@
     private void HandleDisconnect()
     {
         _controller.DisconnectFromServer();
-        _isConnected = false;
 
         //Get rid of previous controller, it's no longer valid!
         _controller = new();

@@ -180,3 +180,4 @@ C:\Users\chanc\Documents\SnakeGame\SnakeClient\GUI\obj\Debug\net9.0\GUI.xml
 C:\Users\chanc\Documents\SnakeGame\SnakeClient\GUI\obj\Debug\net9.0\GUI.pdb
 C:\Users\chanc\Documents\SnakeGame\SnakeClient\GUI\obj\Debug\net9.0\GUI.genruntimeconfig.cache
 C:\Users\chanc\Documents\SnakeGame\SnakeClient\GUI\obj\Debug\net9.0\ref\GUI.dll
+C:\Users\chanc\Documents\SnakeGame\SnakeClient\GUI\obj\Debug\net9.0\GUI.sourcelink.json

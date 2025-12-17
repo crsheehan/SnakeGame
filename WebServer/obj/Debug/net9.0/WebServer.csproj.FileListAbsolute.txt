@@ -66,3 +66,4 @@ C:\Users\chanc\Documents\SnakeGame\WebServer\obj\Debug\net9.0\refint\WebServer.d
 C:\Users\chanc\Documents\SnakeGame\WebServer\obj\Debug\net9.0\WebServer.pdb
 C:\Users\chanc\Documents\SnakeGame\WebServer\obj\Debug\net9.0\WebServer.genruntimeconfig.cache
 C:\Users\chanc\Documents\SnakeGame\WebServer\obj\Debug\net9.0\ref\WebServer.dll
+C:\Users\chanc\Documents\SnakeGame\WebServer\obj\Debug\net9.0\WebServer.sourcelink.json

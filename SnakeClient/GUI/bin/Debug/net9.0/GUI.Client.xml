@@ -76,9 +76,9 @@
             based on that information.
             </summary>
         </member>
-        <member name="F:GUI.Client.Controllers.NetworkController._network">
+        <member name="F:GUI.Client.Controllers.NetworkController._dataSource">
             <summary>
-            The NetworkConnection object representing a connection with the server
+            Source of game data!
             </summary>
         </member>
         <member name="F:GUI.Client.Controllers.NetworkController._messageReceived">
@@ -151,7 +151,22 @@
             Disconnect the network object from the server.
             </summary>
         </member>
-        <member name="M:GUI.Client.Controllers.NetworkController.ConnectToServer(System.String,System.Int32,System.String)">
+        <member name="M:GUI.Client.Controllers.NetworkController.#ctor">
+            <summary>
+            Default constructor - needed for Blazor initialization
+            </summary>
+        </member>
+        <member name="M:GUI.Client.Controllers.NetworkController.UseMockServer(System.String)">
+            <summary>
+            Use the mock server (no network needed!)
+            </summary>
+        </member>
+        <member name="M:GUI.Client.Controllers.NetworkController.UseTcpServer(System.String,System.Int32,System.String)">
+            <summary>
+            Use the real TCP server (requires university WiFi)
+            </summary>
+        </member>
+        <member name="M:GUI.Client.Controllers.NetworkController.ConnectToServer(System.String)">
             <summary>
             Handler for the connect button
             Attempt to connect to the server, then start an asynchronous loop
@@ -356,11 +371,6 @@
         <member name="F:GUI.Client.Pages.SnakeGUI._playerName">
             <summary>
             Default player name
-            </summary>
-        </member>
-        <member name="F:GUI.Client.Pages.SnakeGUI._isConnected">
-            <summary>
-            Bool indicating if the client is connected to the server
             </summary>
         </member>
         <member name="F:GUI.Client.Pages.SnakeGUI.ViewWidth">

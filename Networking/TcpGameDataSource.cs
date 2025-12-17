@@ -1,5 +1,8 @@
 namespace Networking;
 
+/// <summary>
+/// This owns a network connection, handels the connect and receive from the connection, and can send data
+/// </summary>
 public class TcpGameDataSource : IGameDataSource
 {
     private readonly NetworkConnection _network;
@@ -8,7 +11,7 @@ public class TcpGameDataSource : IGameDataSource
     private int _port;
     private string _playerName;
 
-    public bool isConnected => _network.IsConnected;
+    public bool IsConnected => _network.IsConnected;
     public event Action<string>? OnMessageReceived;
 
     public TcpGameDataSource(NetworkConnection network, string server, int port, string playerName)
@@ -22,7 +25,6 @@ public class TcpGameDataSource : IGameDataSource
     /// <summary>
     /// Starts a network connection, sends player names, and listens for game data! 
     /// </summary>
-    /// <exception cref="NotImplementedException"></exception>
     public void Start()
     {
         try
@@ -47,11 +49,20 @@ public class TcpGameDataSource : IGameDataSource
     /// </summary>
     public void Stop()
     {
+        if (!_network.IsConnected) return;
+
         _cts?.Cancel();
         _network.Disconnect();
         _network.Dispose();
     }
-
+    
+    
+    public void Send(string message)
+    {
+        _network.Send(message);
+    }
+ 
+ 
     private void ReceiveLoop(CancellationToken token)
     {
         try
@@ -67,4 +78,6 @@ public class TcpGameDataSource : IGameDataSource
             Stop();
         }
     }
+
+   
 }

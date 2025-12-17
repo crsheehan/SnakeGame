@@ -16,7 +16,7 @@ public class NetworkController
     /// <summary>
     /// Source of game data!
     /// </summary>
-    private readonly IGameDataSource _dataSource;
+    private IGameDataSource _dataSource = null!;
 
 
     /// <summary>
@@ -63,7 +63,7 @@ public class NetworkController
     /// <summary>
     /// Bool to check if the client is connected to server. Represented by network's connection
     /// </summary>
-   // TODO public bool IsConnected => _network.IsConnected;
+    public bool IsConnected => _dataSource?.IsConnected ?? false;
 
     /// <summary>
     /// Maps a snake's ID to it's max score
@@ -104,78 +104,71 @@ public class NetworkController
     }
     
     /// <summary>
+    /// Default constructor - needed for Blazor initialization
+    /// </summary>
+    public NetworkController()
+    {
+        // Will be initialized when UseMockServer or UseTcpServer is called
+    }
+    
+    /// <summary>
+    /// Use the mock server (no network needed!)
+    /// </summary>
+    public void UseMockServer(string playerName)
+    {
+        _dataSource = new MockGameDataSource(playerName);
+        _dataSource.OnMessageReceived += ProcessMessage;
+        ConnectToServer(playerName);
+    }
+    
+    /// <summary>
+    /// Use the real TCP server (requires university WiFi)
+    /// </summary>
+    public void UseTcpServer(string server, int port, string playerName)
+    {
+        var network = new NetworkConnection();
+        _dataSource = new TcpGameDataSource(network, server, port, playerName);
+        _dataSource.OnMessageReceived += ProcessMessage;
+        ConnectToServer(playerName);
+    }
+    
+    /// <summary>
     /// Handler for the connect button
     /// Attempt to connect to the server, then start an asynchronous loop
     /// to receive  messages.
     /// </summary>
-    public void ConnectToServer(string serverNameOrAddress, int serverPort, string playerName)
+    public void ConnectToServer(string playerName)
     {
         try
         {
-            _gamedata = new TcpGameDataSource( new NetworkConnection(serverNameOrAddress, serverPort),serverNameOrAddress, serverPort, playerName);
-            
-            //Get Time client connected for WebServer
+            // ---- WEB SERVER LOGIC  ----
             _startTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            
-            //Add game to webserver
             _gameId = _dbc.AddNewGame(_startTime);
-            
-            //Send name to server
-            _network.Send(playerName + "\n");
             _playerName = playerName;
-            
-            //Set up _maxScores dictionary
             _maxScores = new Dictionary<int, int>();
 
-            //Loop that constantly communicated with server and updates the world model so the view can draw
-            while (_network.IsConnected)
-            {
-                try
-                {
-                    //Get message
-                    _messageReceived = _network.ReadLine();
-                    Console.WriteLine(_messageReceived);
-
-                    //Setup player ID if first message
-                    if (!_havePlayerId)
-                    {
-                        SetUpId();
-                    }
-                    else if (!_haveWorldSize) //Setup world size if we haven't already
-                    {
-                        SetUpWorld();
-                    }
-                    else if (!_haveAllWalls) //Setup walls, third message(s)
-                    {
-                        SetUpWalls();
-                    }
-                    else
-                        lock (serverNameOrAddress)
-                        {
-                            HandleJson(); //Now the setup should be done, so each message should be the state of the game on every frame
-                        }
-                }
-                catch (Exception e)
-                {
-                    DisconnectFromServer();
-
-                    string end = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-                    // update every player
-                    foreach (var s in _world.snakes.Values)
-                    {
-                        _dbc.SetPlayerEndTime(s.snakeId, _gameId, end);
-                    }
-
-                    // update the game end time
-                    _dbc.SetGameEndTime(_gameId, end);
-                }
-            }
+            // ---- GAME SERVER CONNECTION  ----
+            _dataSource.Start();
         }
         catch (Exception e)
         {
             Console.WriteLine($"Error connecting to server: {e.Message}");
         }
+    }
+
+    private void ProcessMessage(string message)
+    {
+        _messageReceived = message;
+        Console.WriteLine(message);
+
+        if (!_havePlayerId)
+            SetUpId();
+        else if (!_haveWorldSize)
+            SetUpWorld();
+        else if (!_haveAllWalls)
+            SetUpWalls();
+        else
+            HandleJson();
     }
 
     /// <summary>
@@ -335,7 +328,7 @@ public class NetworkController
 
         if (command != null)
         {
-            _network.Send(JsonSerializer.Serialize(command) + "\n");
+            _dataSource.Send(JsonSerializer.Serialize(command) + "\n");
         }
     }
 

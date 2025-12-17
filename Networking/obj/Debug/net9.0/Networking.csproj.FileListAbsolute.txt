@@ -27,3 +27,4 @@ C:\Users\chanc\Documents\SnakeGame\Networking\obj\Debug\net9.0\refint\Networking
 C:\Users\chanc\Documents\SnakeGame\Networking\obj\Debug\net9.0\Networking.xml
 C:\Users\chanc\Documents\SnakeGame\Networking\obj\Debug\net9.0\Networking.pdb
 C:\Users\chanc\Documents\SnakeGame\Networking\obj\Debug\net9.0\ref\Networking.dll
+C:\Users\chanc\Documents\SnakeGame\Networking\obj\Debug\net9.0\Networking.sourcelink.json

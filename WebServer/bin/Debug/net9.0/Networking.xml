@@ -104,5 +104,21 @@
             </param>
             <param name="port"> The port (e.g., 11000) to listen on. </param>
         </member>
+        <member name="T:Networking.TcpGameDataSource">
+            <summary>
+            This owns a network connection, handels the connect and receive from the connection, and can send data
+            </summary>
+        </member>
+        <member name="M:Networking.TcpGameDataSource.Start">
+            <summary>
+            Starts a network connection, sends player names, and listens for game data! 
+            </summary>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="M:Networking.TcpGameDataSource.Stop">
+            <summary>
+            Stop listening 
+            </summary>
+        </member>
     </members>
 </doc>
