@@ -204,6 +204,11 @@
             Updates max score dictionary based off of current state of the game
             </summary>
         </member>
+        <member name="M:GUI.Client.MockData.MockGameDataSource.Stop">
+            <summary>
+            Stop connection, set IsConnected to false to stop sending information. 
+            </summary>
+        </member>
         <member name="T:GUI.Client.Models.ControlCommand">
             <summary>
             Control commands are how the client will tell the server what it wants to do (what direction it wants to move). 
@@ -396,6 +401,11 @@
         <member name="F:GUI.Client.Pages.SnakeGUI.SnakeColors">
             <summary>
             List of possible colors for snakes in Hex. 
+            </summary>
+        </member>
+        <member name="F:GUI.Client.Pages.SnakeGUI._worldLock">
+            <summary>
+            For locking world when modifying to avoid race conditions
             </summary>
         </member>
         <member name="M:GUI.Client.Pages.SnakeGUI.OnAfterRenderAsync(System.Boolean)">

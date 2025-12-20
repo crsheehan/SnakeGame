@@ -1,6 +1,7 @@
 using System.Data;
 using System.Diagnostics;
 using System.Text.Json;
+using GUI.Client.MockData;
 using GUI.Client.Models;
 using Networking;
 
@@ -87,6 +88,10 @@ public class NetworkController
 
     private DatabaseConnection _dbc = new DatabaseConnection();
 
+    private readonly object _worldLock = new();
+
+    private bool _connectedToDatabase;
+
 
     /// <summary>
     /// Disconnect the network object from the server.
@@ -101,37 +106,41 @@ public class NetworkController
     {
         this._dataSource = gamedata;
         _dataSource.OnMessageReceived += ProcessMessage;
+        _maxScores = new();
     }
-    
+
     /// <summary>
     /// Default constructor - needed for Blazor initialization
     /// </summary>
     public NetworkController()
     {
         // Will be initialized when UseMockServer or UseTcpServer is called
+        _maxScores = new Dictionary<int, int>();
     }
-    
+
     /// <summary>
     /// Use the mock server (no network needed!)
     /// </summary>
     public void UseMockServer(string playerName)
     {
+        _connectedToDatabase = false;
         _dataSource = new MockGameDataSource(playerName);
         _dataSource.OnMessageReceived += ProcessMessage;
         ConnectToServer(playerName);
     }
-    
+
     /// <summary>
     /// Use the real TCP server (requires university WiFi)
     /// </summary>
     public void UseTcpServer(string server, int port, string playerName)
     {
+        _connectedToDatabase = true;
         var network = new NetworkConnection();
         _dataSource = new TcpGameDataSource(network, server, port, playerName);
         _dataSource.OnMessageReceived += ProcessMessage;
         ConnectToServer(playerName);
     }
-    
+
     /// <summary>
     /// Handler for the connect button
     /// Attempt to connect to the server, then start an asynchronous loop
@@ -139,27 +148,29 @@ public class NetworkController
     /// </summary>
     public void ConnectToServer(string playerName)
     {
-        try
+        if (_connectedToDatabase)
         {
-            // ---- WEB SERVER LOGIC  ----
-            _startTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            _gameId = _dbc.AddNewGame(_startTime);
-            _playerName = playerName;
-            _maxScores = new Dictionary<int, int>();
+            try
+            {
+                // ---- WEB SERVER LOGIC  ----
+                _startTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                _gameId = _dbc.AddNewGame(_startTime);
+                _playerName = playerName;
+                _maxScores = new Dictionary<int, int>();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error connecting to server: {e.Message}");
+            }
+        }
 
-            // ---- GAME SERVER CONNECTION  ----
-            _dataSource.Start();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"Error connecting to server: {e.Message}");
-        }
+        // ---- GAME SERVER CONNECTION  ----
+        _dataSource.Start();
     }
 
     private void ProcessMessage(string message)
     {
         _messageReceived = message;
-        Console.WriteLine(message);
 
         if (!_havePlayerId)
             SetUpId();
@@ -183,45 +194,57 @@ public class NetworkController
             {
                 Snake snake = JsonSerializer.Deserialize<Snake>(_messageReceived)!;
 
-                //If our world contains snake sent from server
-                if (_world.snakes.ContainsKey(snake.snakeId))
+                lock (_worldLock)
                 {
-                    if (snake.dc) //If snake disconnected, remove from world
+                    //If our world contains snake sent from server
+                    if (_world.snakes.ContainsKey(snake.snakeId))
                     {
-                        _world.snakes.Remove(snake.snakeId);
-                        _dbc.SetPlayerEndTime(snake.snakeId, _gameId, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                        if (snake.snakeId == _playerId)
+                        if (snake.dc) //If snake disconnected, remove from world
                         {
-                            _dbc.SetGameEndTime(_gameId, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                            _world.snakes.Remove(snake.snakeId);
+
+                            if (_connectedToDatabase)
+                            {
+                                _dbc.SetPlayerEndTime(snake.snakeId, _gameId,
+                                    DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                                if (snake.snakeId == _playerId)
+                                {
+                                    _dbc.SetGameEndTime(_gameId, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            _world.snakes[snake.snakeId] =
+                                snake; //Snake in world already, so just update it in dictionary
                         }
                     }
                     else
                     {
-                        _world.snakes[snake.snakeId] = snake; //Snake in world already, so just update it in dictionary
-                        
+                        _world.snakes.Add(snake.snakeId, snake);
+
+                        // Initialize max score for this snake
+                        _maxScores[snake.snakeId] = snake.score;
+                        if (_connectedToDatabase)
+                        {
+                             _dbc.AddNewPlayer(snake.snakeId, _gameId, snake.name, snake.score, _startTime);
+                        }
                     }
                 }
-                else
+                
+                //update own snake
+                if (_world.snakes.TryGetValue(_playerId, out var worldSnake))
                 {
-                    _world.snakes.Add(snake.snakeId, snake);
-
-                    // Initialize max score for this snake
-                    _maxScores[snake.snakeId] = snake.score;
-                    _dbc.AddNewPlayer(snake.snakeId, _gameId, snake.name, snake.score, _startTime);
+                    MySnake = worldSnake;
                 }
-                   
-                
-               
 
-                MySnake = _world.snakes[_playerId]; //Update own snake
                 UpdateSnakeMaxScores(); //update max scores
-                
-              
             }
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Error handling snake json: {e.Message}");
+            Console.WriteLine($"Error handling snake json: {e.Message}" + "\n"
+                 + "JSON Received:" +  _messageReceived);
         }
 
         try
@@ -230,18 +253,20 @@ public class NetworkController
             {
                 Powerup pow = JsonSerializer.Deserialize<Powerup>(_messageReceived)!;
 
-
-                if (_world.powerups.ContainsKey(pow.powerupId)) //If powerup is already in world
+                lock (_worldLock)
                 {
-                    if (pow.died) //If it died, remove it from world
+                    if (_world.powerups.ContainsKey(pow.powerupId)) //If powerup is already in world
                     {
-                        _world.powerups.Remove(pow.powerupId);
+                        if (pow.died) //If it died, remove it from world
+                        {
+                            _world.powerups.Remove(pow.powerupId);
+                        }
+                        else
+                            _world.powerups[pow.powerupId] = pow;
                     }
-                    else
-                        _world.powerups[pow.powerupId] = pow;
+                    else //Powerup not in world, add it
+                        _world.powerups.Add(pow.powerupId, pow);
                 }
-                else //Powerup not in world, add it
-                    _world.powerups.Add(pow.powerupId, pow);
             }
         }
         catch (Exception e)
@@ -260,12 +285,14 @@ public class NetworkController
             if (_messageReceived.Contains("wall"))
             {
                 Wall? wall = JsonSerializer.Deserialize<Wall>(_messageReceived); //Throws if not a wall
-
-                //Check wall is a wall
-                if (wall is not null)
+                lock (_worldLock)
                 {
-                    _world.walls.Add(wall);
-                    return;
+                    //Check wall is a wall
+                    if (wall is not null)
+                    {
+                        _world.walls.Add(wall);
+                        return;
+                    }
                 }
             }
             else
@@ -280,7 +307,7 @@ public class NetworkController
             HandleJson();
         }
     }
-
+    
     /// <summary>
     /// Sets up player ID based off Json sent from server
     /// </summary>
@@ -304,7 +331,11 @@ public class NetworkController
         //Second message, gets world size
         if (int.TryParse(_messageReceived, out int parsedSize))
         {
-            _world = new World(parsedSize);
+            lock (_worldLock)
+            {
+                _world = new World(parsedSize);
+            }
+
             _haveWorldSize = true;
         }
         else Console.WriteLine("Something went wrong with Receiving World size");
@@ -345,17 +376,34 @@ public class NetworkController
                 //if snakes current score is higher than max, update max
                 if (_maxScores[s.snakeId] < s.score)
                 {
-                    _maxScores[s.snakeId] =  s.score;
-                    _dbc.UpdatePlayerScore(s.snakeId, _gameId, s.score); //update database
+                    _maxScores[s.snakeId] = s.score;
+                    if (_connectedToDatabase)
+                    {
+                         _dbc.UpdatePlayerScore(s.snakeId, _gameId, s.score); //update database
+                    }
+                   
                 }
             }
             else //Snake is not in our dictionary yet!
             {
                 _maxScores.Add(s.snakeId, s.score);
-                _dbc.UpdatePlayerScore(s.snakeId, _gameId, s.score);
+                if (_connectedToDatabase)
+                {
+                      _dbc.UpdatePlayerScore(s.snakeId, _gameId, s.score);
+                }
+              
             }
         }
-        
-       
+    }
+
+    public World? GetWorldSnapshot()
+    {
+        lock (_worldLock)
+        {
+            if (_world == null)
+                return null;
+
+            return new World(_world); // deep copy
+        }
     }
 }

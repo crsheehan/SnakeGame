@@ -23,4 +23,11 @@
     <ProjectReference Include="..\..\Networking\Networking.csproj" />
   </ItemGroup>
 
+
+
+  <ItemGroup>
+    <None Remove="MockData\MockServer.txt" />
+    <EmbeddedResource Include="MockData\MockServer.txt" />
+  </ItemGroup>
+
 </Project>

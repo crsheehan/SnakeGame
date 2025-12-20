@@ -4,11 +4,6 @@
         <name>Networking</name>
     </assembly>
     <members>
-        <member name="M:Networking.MockGameDataSource.Stop">
-            <summary>
-            Stop connection, set IsConnected to false to stop sending information. 
-            </summary>
-        </member>
         <member name="T:Networking.NetworkConnection">
             <summary>
               Wraps the StreamReader/Writer/TcpClient together so we

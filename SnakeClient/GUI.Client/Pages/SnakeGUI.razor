@@ -128,6 +128,10 @@
     /// </summary>
     private readonly string[] SnakeColors = new[] { "#FF4136", "#2ECC40", "#0074D9", "#FFDC00", "#B10DC9", "#FF851B", "#39CCCC", "#85144b" };
 
+    /// <summary>
+    /// For locking world when modifying to avoid race conditions
+    /// </summary>
+    private readonly object _worldLock = new();
 
     /// <summary>
     /// Runs when the page first loads. Loads the _jsModule, canvas, and starts the game loop
@@ -170,6 +174,8 @@
     /// </summary>
     private async Task DrawFrame()
     {
+        Debug.WriteLine(_controller.IsConnected);
+        
         //If not connect, just don't draw anything
         if (!_controller.IsConnected)
             return;
@@ -180,14 +186,19 @@
 
             //Create a copy of the world from the controller
             World world;
-            lock (_serverNameOrAddress)
+            lock (_worldLock)
             {
                 if (!_controller._world.snakes.ContainsKey(_controller._playerId)) //if our snake doesn't exist yet, don't draw
                 {
                     return;
                 }
 
-                world = new World(_controller._world);
+                world = _controller.GetWorldSnapshot();
+
+                if (world == null)
+                {
+                    return;
+                }
 
                 // Remove disconnected snakes from local copy (necessary for scoreboard)
                 world.snakes = world.snakes
