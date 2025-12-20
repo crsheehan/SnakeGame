@@ -23,29 +23,16 @@ public class WebServer
 
     static void Main()
     {
-        Console.WriteLine("Starting web server...");
-        // PS8: Listens for connections on port 80, runs a delegate when connected
-
-        //Checks to see if server is in mock mode. The database can only be connected to when the local machine is
-        //connected to University of Utah wi-fi. Mock is set to true to mimic a database when the local user is NOT
-        //connected to University wi-fi. To change, set _mock to false. 
-        if (!_mock)
-        {
-            Server.StartServer(HandleHttpConnection, 80);
-        }
-        else
-        {
-            Server.StartServer(MockHandleHttpConnection, 80);
-        }
-
-        Console.Read(); // prevent main from returning 
+        WebServerHost.Start(mock: true, port: 8080);
+        Console.ReadLine();
     }
+
 
     /// <summary>
     /// When the user is not connected to the University of Utah wifi, this acts as a mock database that just returns numbers with no meaning
     /// </summary>
     /// <param name="client">Client</param>
-    private static void MockHandleHttpConnection(NetworkConnection client)
+    internal static void MockHandleHttpConnection(NetworkConnection client)
     {
         Console.WriteLine("A client connected");
         string message = client.ReadLine();
@@ -150,7 +137,7 @@ public class WebServer
     /// Passed into server. Sends html to client to display Snake webserver
     /// </summary>
     /// <param name="client">Client to interact with. </param>
-    private static void HandleHttpConnection(NetworkConnection client)
+    internal static void HandleHttpConnection(NetworkConnection client)
     {
         Console.WriteLine("A client connected");
         string message = client.ReadLine();

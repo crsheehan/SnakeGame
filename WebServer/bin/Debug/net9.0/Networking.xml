@@ -113,7 +113,6 @@
             <summary>
             Starts a network connection, sends player names, and listens for game data! 
             </summary>
-            <exception cref="T:System.NotImplementedException"></exception>
         </member>
         <member name="M:Networking.TcpGameDataSource.Stop">
             <summary>

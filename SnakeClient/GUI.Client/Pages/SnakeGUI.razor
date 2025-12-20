@@ -66,7 +66,7 @@
 
 @code
 {
-    private bool _useMockServer = false; 
+    private bool _useMockServer = true; 
     
     /// <summary>
     /// Stores reference to canvas!
@@ -174,8 +174,6 @@
     /// </summary>
     private async Task DrawFrame()
     {
-        Debug.WriteLine(_controller.IsConnected);
-        
         //If not connect, just don't draw anything
         if (!_controller.IsConnected)
             return;
@@ -337,9 +335,6 @@
     private void HandleDisconnect()
     {
         _controller.DisconnectFromServer();
-
-        //Get rid of previous controller, it's no longer valid!
-        _controller = new();
 
         InvokeAsync(StateHasChanged);
     }
