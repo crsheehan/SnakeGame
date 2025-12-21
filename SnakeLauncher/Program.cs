@@ -5,7 +5,7 @@ class Program
 {
     static void Main()
     {
-        Console.WriteLine("🐍 Starting Snake System...\n");
+        Console.WriteLine(" Starting Snake System...\n");
 
         // Start web server
         Task.Run(() =>
@@ -17,12 +17,13 @@ class Program
         Process.Start(new ProcessStartInfo
         {
             FileName = "dotnet",
-            Arguments = "run --project ../GUI.Client",
+            Arguments = @"run --project ..\SnakeClient\GUI",
             UseShellExecute = true
         });
 
-        Console.WriteLine("\n✅ System running:");
-        Console.WriteLine("• Game UI: http://localhost:5000");
+
+        Console.WriteLine("\n System running:");
+        Console.WriteLine("• Game UI: http://localhost:5204");
         Console.WriteLine("• Web Scores: http://localhost:8080");
         Console.WriteLine("\nPress Ctrl+C to exit.");
 

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SnakeLauncher")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2cb5f8262ee6e129a600dacd1268fe5498529ebb")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a935bf958475b3ddabf9f48cea16b1233db9fb33")]
 [assembly: System.Reflection.AssemblyProductAttribute("SnakeLauncher")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SnakeLauncher")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
