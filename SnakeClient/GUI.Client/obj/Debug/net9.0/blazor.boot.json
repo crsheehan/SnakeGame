@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "GUI.Client",
   "resources": {
-    "hash": "sha256-iRZ67QEzUZXwX+UDY4L2/L+wegWuV5HvF3X6/oJbbcQ=",
+    "hash": "sha256-6f+IdukiPUwz3k5sCkcQXYjylm3CfNrFUKEwnU1RGVE=",
     "fingerprinting": {
       "Blazor.Extensions.Canvas.JS.iokb7a5y98.wasm": "Blazor.Extensions.Canvas.JS.wasm",
       "Blazor.Extensions.Canvas.45bjdsigtk.wasm": "Blazor.Extensions.Canvas.wasm",
@@ -215,10 +215,10 @@
       "icudt_CJK.tjcz0u77k5.dat": "icudt_CJK.dat",
       "icudt_EFIGS.tptq2av103.dat": "icudt_EFIGS.dat",
       "icudt_no_CJK.lfu7j35m59.dat": "icudt_no_CJK.dat",
-      "Networking.kmypf8anzi.wasm": "Networking.wasm",
-      "Networking.gtu5fm4rnl.pdb": "Networking.pdb",
-      "GUI.Client.t32rai0ags.wasm": "GUI.Client.wasm",
-      "GUI.Client.0w779ule10.pdb": "GUI.Client.pdb"
+      "Networking.yrpvcq4cd9.wasm": "Networking.wasm",
+      "Networking.8xe0dtxklw.pdb": "Networking.pdb",
+      "GUI.Client.v7g9xygziv.wasm": "GUI.Client.wasm",
+      "GUI.Client.ge0a7rjidg.pdb": "GUI.Client.pdb"
     },
     "jsModuleNative": {
       "dotnet.native.noby4tlk4d.js": "sha256-p9eEzXhQIsI0a5bBJhfzW15iRafgplTxT8XrO5FiH9o="
@@ -442,12 +442,12 @@
       "WindowsBase.i7qip04bb5.wasm": "sha256-Lg5W8BM50Cpl1dgTrG9RQOrBRKOJq6H1t5sH3yf4KDU=",
       "mscorlib.ijjuvl21w4.wasm": "sha256-ku4DyQX7IfTdwPwDlrz9odvCs4mrgsJl0fNaqY56KOI=",
       "netstandard.jgp13znru0.wasm": "sha256-I7arRnyxWh5PItslQKjzLIG7EpohJACm7p/7K8eD0YA=",
-      "Networking.kmypf8anzi.wasm": "sha256-jGpRf13qCxw9xMHCPvXNwjBt5TqdMwFME9TlA2425bA=",
-      "GUI.Client.t32rai0ags.wasm": "sha256-l2quWQORpJWP7zOIlfbHNdrFIC7RwX0ycZ0k9MZYGBA="
+      "Networking.yrpvcq4cd9.wasm": "sha256-Pggnmmi8aWJZteB2w7rBw1zMHay4NFHiwhsrW83Qho0=",
+      "GUI.Client.v7g9xygziv.wasm": "sha256-WwOAVegAdw9sPKGSsGveIdle/KvG3NkK5LO6EXnM8Tk="
     },
     "pdb": {
-      "Networking.gtu5fm4rnl.pdb": "sha256-vE1JV+c7wn+GC5CtaFCY67mcxhjyiL94M6Mj4ibJF8A=",
-      "GUI.Client.0w779ule10.pdb": "sha256-sNSve2kUiywIYehiF/jKy5sXiK6vyWdzpp95DfTMzsM="
+      "Networking.8xe0dtxklw.pdb": "sha256-dOOK0tgnnkGZOqa+8H4BrbKbXS+U9EeWgpcYiZI0/Gk=",
+      "GUI.Client.ge0a7rjidg.pdb": "sha256-iIOFEVNi76EFKqsxEBC1uFzJYH2tAakgSyTg1L4qsno="
     }
   },
   "cacheBootResources": true,

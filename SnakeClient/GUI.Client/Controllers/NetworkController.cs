@@ -171,7 +171,7 @@ public class NetworkController
     private void ProcessMessage(string message)
     {
         _messageReceived = message;
-     
+        Console.WriteLine(message);
 
         if (!_havePlayerId)
             SetUpId();

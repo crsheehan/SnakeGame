@@ -1,7 +1,7 @@
 <GameSettings>
   <UniverseSize>2000</UniverseSize>
   <MSPerFrame>100</MSPerFrame>
-  <RespawnRate>200</RespawnRate>
+  <RespawnRate>100</RespawnRate>
 
 
   <!-- top border -->
