@@ -1,0 +1,12 @@
+# Build output
+bin/
+obj/
+
+# IDEs
+.vs/
+.vscode/
+.idea/
+
+# OS junk
+Thumbs.db
+.DS_Store

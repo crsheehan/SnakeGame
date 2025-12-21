@@ -12,6 +12,14 @@ class Program
         {
             WebServerHost.Start(mock: true, port: 8080);
         });
+        
+        // Start GUI client
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            Arguments = @"run --project ..\WebServer",
+            UseShellExecute = true
+        });
 
         // Start GUI client
         Process.Start(new ProcessStartInfo
