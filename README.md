@@ -18,7 +18,9 @@ your game, such as players, high scores, and enter and leave times.
 To install this project, simply clone the repository:  
   - git clone https://github.com/crsheehan/SnakeGame.git
   - cd SnakeGame\SnakeLauncher
-  - dotnet run
+  - dotnet run  
+  
+_Important Note: Snake Server and Connection to database require the local machine to be on the University of Utah wifi to run.  _
  
 
 **Known Bugs**  
