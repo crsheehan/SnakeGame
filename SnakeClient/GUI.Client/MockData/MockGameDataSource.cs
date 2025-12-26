@@ -2,6 +2,10 @@ using Networking;
 
 namespace GUI.Client.MockData;
 
+/// <summary>
+/// Game data source that mocks the server used to host multiple clients. Sends fake information to client mimicking snake gameplay
+/// Created by Chancellor Sheehan
+/// </summary>
 public class MockGameDataSource : IGameDataSource
 {
     public MockGameDataSource(string playerName)

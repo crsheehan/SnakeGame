@@ -5,6 +5,7 @@ namespace GUI.Client.Controllers;
 
 /// <summary>
 /// Provides fucntionality for updating SQL database for Snake
+/// Created by Chancellor Sheehan
 /// </summary>
 public class DatabaseConnection
 {
@@ -58,7 +59,7 @@ public class DatabaseConnection
 
 
     /// <summary>
-    /// Adds a new player to the Players table. Sets player Id, Player name, max score, startTime. 
+    /// Adds a new player to the Players table. Sets player ID, Player name, max score, startTime. 
     /// </summary>
     public void AddNewPlayer(int playerId, int gameId, string playerName, int maxScore, string startTime)
     {
@@ -205,20 +206,19 @@ public class DatabaseConnection
             
 
             // Execute the command and cycle through the DataReader object
-            using (MySqlDataReader reader = cmd.ExecuteReader())
+            using MySqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
-                while (reader.Read())
+                GamesRow row = new GamesRow
                 {
-                    GamesRow row = new GamesRow();
+                    gameID = (int)reader["ID"],
+                    start = reader["StartTime"].ToString(),
+                    end = reader["EndTime"].ToString()
+                };
 
 
-                    row.gameID = (int)reader["ID"];
-                    row.start = reader["StartTime"].ToString();
-                    row.end = reader["EndTime"].ToString();
-
-                    Console.WriteLine($"Game ID: {row.gameID},  StartTime: {row.start}, EndTime: {row.end}");
-                    games.Add(row);
-                }
+                Console.WriteLine($"Game ID: {row.gameID},  StartTime: {row.start}, EndTime: {row.end}");
+                games.Add(row);
             }
 
 
@@ -257,23 +257,21 @@ public class DatabaseConnection
             List<PlayersRow> players = new List<PlayersRow>();
             
             // Execute the command and cycle through the DataReader object
-            using (MySqlDataReader reader = cmd.ExecuteReader())
+            using MySqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
-                while (reader.Read())
-                {
-                    PlayersRow row = new PlayersRow();
+                PlayersRow row = new PlayersRow();
 
 
-                    row.Id = (int)reader["ID"];
-                    row.gameID = (int)reader["GameID"];
-                    row.name = reader["Name"].ToString();
-                    row.maxScore = (int)reader["MaxScore"];
-                    row.start = reader["EnterTime"].ToString();
-                    row.end = reader["LeaveTime"].ToString();
+                row.Id = (int)reader["ID"];
+                row.gameID = (int)reader["GameID"];
+                row.name = reader["Name"].ToString();
+                row.maxScore = (int)reader["MaxScore"];
+                row.start = reader["EnterTime"].ToString();
+                row.end = reader["LeaveTime"].ToString();
 
-                    Console.WriteLine($"Game ID: {row.gameID},  StartTime: {row.start}, EndTime: {row.end}");
-                    players.Add(row);
-                }
+                Console.WriteLine($"Game ID: {row.gameID},  StartTime: {row.start}, EndTime: {row.end}");
+                players.Add(row);
             }
 
 
@@ -292,8 +290,19 @@ public class DatabaseConnection
     /// </summary>
     public class GamesRow
     {
+        /// <summary>
+        /// Unique game ID
+        /// </summary>
         public int gameID { get; set; }
+        
+        /// <summary>
+        /// Start time of Game
+        /// </summary>
         public string? start { get; set; }
+        
+        /// <summary>
+        /// End time of game
+        /// </summary>
         public string? end { get; set; }
     }
 
@@ -302,16 +311,34 @@ public class DatabaseConnection
     /// </summary>
     public class PlayersRow
     {
+        /// <summary>
+        /// Unique player ID
+        /// </summary>
         public int Id { get; set; } 
         
+        /// <summary>
+        /// Unique game ID player was seen in
+        /// </summary>
         public int  gameID { get; set; }
 
+        /// <summary>
+        /// Player name
+        /// </summary>
         public string? name { get; set; }
         
+        /// <summary>
+        /// Max score of player
+        /// </summary>
         public int maxScore { get; set; }
         
+        /// <summary>
+        /// Time player joined the game
+        /// </summary>
         public string? start { get; set; }
         
+        /// <summary>
+        /// Time player left the game
+        /// </summary>
         public  string? end { get; set; }
         
     }

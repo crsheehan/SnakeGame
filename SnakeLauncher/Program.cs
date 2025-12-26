@@ -1,6 +1,9 @@
 ﻿using WebServer;
 using System.Diagnostics;
-
+/// <summary>
+/// Runs the webserver and snake client
+/// Created by Chancellor Sheehan
+/// </summary>
 class Program
 {
     static void Main()
@@ -11,14 +14,6 @@ class Program
         Task.Run(() =>
         {
             WebServerHost.Start(mock: true, port: 8080);
-        });
-        
-        // Start GUI client
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = "dotnet",
-            Arguments = @"run --project ..\WebServer",
-            UseShellExecute = true
         });
 
         // Start GUI client

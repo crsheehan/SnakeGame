@@ -11,6 +11,7 @@ namespace GUI.Client.Controllers;
 /// <summary>
 /// The network controller is responsible for parsing information received from the network and updating the model
 /// based on that information.
+/// Created by Chancellor Sheehan
 /// </summary>
 public class NetworkController
 {
