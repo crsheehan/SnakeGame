@@ -20,7 +20,8 @@ To install this project, simply clone the repository:
   - cd SnakeGame\SnakeLauncher
   - dotnet run  
   
-_Important Note: Snake Server and Connection to database require the local machine to be on the University of Utah wifi to run.  _
+_Important Note: Snake Server and Connection to database require the local machine to be on the University of Utah wifi to run. To combat this, I created a mock server and database that displays  
+a brief demonstration of what the game looks like._
  
 
 **Known Bugs**  
