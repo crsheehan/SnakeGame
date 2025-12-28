@@ -13,7 +13,7 @@ your game, such as players, high scores, and enter and leave times.
 - Respawn after death
   
 **Installation**  
-(_Note: Git and Net.9 required_)  
+(_Note: Git and .Net SDK 9.0+ required_)  
   
 To install this project, simply clone the repository:  
   - git clone https://github.com/crsheehan/SnakeGame.git
