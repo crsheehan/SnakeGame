@@ -35,9 +35,17 @@ public class WebServer
     internal static void MockHandleHttpConnection(NetworkConnection client)
     {
         Console.WriteLine("A client connected");
-        string message = client.ReadLine();
+        string? message = client.ReadLine();
         Console.WriteLine(message);
 
+        //Check if message is null
+        if (message == null)
+        {
+            Console.WriteLine("Received null message from client");
+            client.Disconnect();
+            return;
+        }
+        
         //This is the home page!
         if (message.Contains("GET / "))
         {

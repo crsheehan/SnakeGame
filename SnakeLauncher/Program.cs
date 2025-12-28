@@ -20,9 +20,11 @@ class Program
         Process.Start(new ProcessStartInfo
         {
             FileName = "dotnet",
-            Arguments = @"run --project ..\SnakeClient\GUI",
-            UseShellExecute = true
+            Arguments = @"run --project ..\..\..\..\SnakeClient\GUI\GUI.csproj",
+            UseShellExecute = false
         });
+
+
 
 
         Console.WriteLine("\n System running:");
